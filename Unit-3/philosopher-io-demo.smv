@@ -1,3 +1,5 @@
+-- io stands for occuring infinitely often
+
 MODULE philosopher(i, left, right)
 
 VAR
@@ -7,38 +9,40 @@ ASSIGN
 	init(location) := think ;
 	next(location) := case
 			  location = think : {think, req_left, req_right} ;
-			  location = req_left & left=free : have_left ;
-			  location = have_left & right=free : eat ;
-			  location = req_right & right=free : eat ;
-			  location = have_right & left=free : eat ;
+			  location = req_left & left=i : have_left ;
+			  location = have_left & right=i : eat ;
+			  location = req_right & right=i : have_right ;
+			  location = have_right & left=i : eat ;
 			  location = eat : {eat, return} ;
 			  location = return : think ;
 			  TRUE : location ;
 			  esac ;
 	next(left) := case
-		      location = req_left & left = free : i ;
-		      location = return : free ;
-		      location = have_right & left = free : i ;
+		      location = return & i < 3 : i + 1 ;
+		      location = return & i=3 : 0 ;
 		      TRUE : left ;
 		      esac ;
 	next(right) := case
-		       location = req_right & right = free : i ;
-		       location = return : free ;
-		       location = have_right & right = free : i ;
+		       location = return & i > 0 : i - 1 ;
+		       location = return & i=0 : 3 ; 
 		       TRUE : right ;
 		       esac ;
+
+FAIRNESS running
+FAIRNESS !(location=eat)
+FAIRNESS !(location=think)
 
 MODULE main
 
 VAR
-	sticks : array 0 .. 3 of {free, 0, 1, 2, 3} ;
+	sticks : array 0 .. 3 of {0, 1, 2, 3} ;
 	phil0 : process philosopher(0, sticks[0], sticks[3]) ;
 	phil1 : process philosopher(1, sticks[1], sticks[0]) ;
 	phil2 : process philosopher(2, sticks[2], sticks[1]) ;
 	phil3 : process philosopher(3, sticks[3], sticks[2]) ;
 
 ASSIGN
-	init(sticks[0]) := free ;
-	init(sticks[1]) := free ;
-	init(sticks[2]) := free ;
-	init(sticks[3]) := free ;
+	init(sticks[0]) := 0 ;
+	init(sticks[1]) := 2 ;
+	init(sticks[2]) := 2 ;
+	init(sticks[3]) := 0 ;
